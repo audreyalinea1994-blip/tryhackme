@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ethical Hacking Workshop</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&amp;family=Outfit:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Outfit', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .tab-active { background: var(--primary-action); color: #fff; }
+    .tab-inactive { background: var(--surface); color: var(--text); }
+    .tab-inactive:hover { opacity: 0.8; }
+    .card-glow { transition: box-shadow 0.3s, transform 0.3s; }
+    .card-glow:hover { box-shadow: 0 0 30px rgba(0,255,136,0.15); transform: translateY(-2px); }
+    .typing-cursor::after { content: '█'; animation: blink 1s infinite; color: var(--primary-action); }
+    @keyframes blink { 0%,50% { opacity: 1; } 51%,100% { opacity: 0; } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-up { animation: fadeUp 0.5s ease-out forwards; }
+    .fade-up-d1 { animation-delay: 0.1s; opacity: 0; }
+    .fade-up-d2 { animation-delay: 0.2s; opacity: 0; }
+    .fade-up-d3 { animation-delay: 0.3s; opacity: 0; }
+    @keyframes scanline { 0% { top: -10%; } 100% { top: 110%; } }
+    .scanline { position: absolute; width: 100%; height: 4px; background: linear-gradient(90deg, transparent, rgba(0,255,136,0.1), transparent); animation: scanline 4s linear infinite; pointer-events: none; }
+    .trivia-card { cursor: pointer; perspective: 1000px; }
+    .trivia-inner { transition: transform 0.6s; transform-style: preserve-3d; position: relative; }
+    .trivia-card.flipped .trivia-inner { transform: rotateY(180deg); }
+    .trivia-front, .trivia-back { backface-visibility: hidden; position: absolute; inset: 0; border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+    .trivia-back { transform: rotateY(180deg); }
+    .quiz-option { transition: all 0.2s; cursor: pointer; }
+    .quiz-option:hover { transform: scale(1.02); }
+    .quiz-correct { border-color: #00ff88 !important; background: rgba(0,255,136,0.1) !important; }
+    .quiz-wrong { border-color: #ff4444 !important; background: rgba(255,68,68,0.1) !important; }
+    :root {
+      --bg: #0a0e17;
+      --surface: #131a2b;
+      --text: #e0e6f0;
+      --primary-action: #00ff88;
+      --secondary-action: #7c5cfc;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--surface); border-radius: 3px; }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full" style="background: var(--bg); color: var(--text); margin: 0;">
+  <div id="app" class="h-full w-full overflow-auto">
+   <div class="scanline"></div><!-- Hero Section -->
+   <header class="relative px-6 py-12 md:py-20 text-center max-w-5xl mx-auto">
+    <div class="fade-up">
+     <p class="mono text-sm tracking-widest mb-4" style="color: var(--primary-action);">$ whoami</p>
+     <h1 id="el-title" class="text-4xl md:text-6xl font-800 mb-4 leading-tight">Ethical Hacking</h1>
+     <h2 id="el-subtitle" class="text-xl md:text-2xl font-300 mb-6 opacity-80">Comprehensive Workshop &amp; Hands-On Lab</h2>
+     <div class="inline-flex items-center gap-3 px-5 py-3 rounded-full mono text-sm" style="background: var(--surface); border: 1px solid rgba(0,255,136,0.2);"><i data-lucide="shield-check" style="color: var(--primary-action); width:18px; height:18px;"></i> <span id="el-speaker">Audrey E. Alinea, MIT</span>
+     </div>
+    </div>
+   </header><!-- Navigation Tabs -->
+   <nav class="sticky top-0 z-40 px-4 py-3" style="background: var(--bg); border-bottom: 1px solid rgba(255,255,255,0.05);">
+    <div class="max-w-5xl mx-auto flex gap-2 overflow-x-auto pb-1" id="tab-nav"><button onclick="switchTab('discussion')" data-tab="discussion" class="tab-active px-4 py-2 rounded-lg text-sm font-600 whitespace-nowrap transition-all"> <i data-lucide="book-open" style="width:14px;height:14px;display:inline;vertical-align:-2px;"></i> Discussion </button> <button onclick="switchTab('trivia')" data-tab="trivia" class="tab-inactive px-4 py-2 rounded-lg text-sm font-600 whitespace-nowrap transition-all"> <i data-lucide="lightbulb" style="width:14px;height:14px;display:inline;vertical-align:-2px;"></i> Trivia </button> <button onclick="switchTab('activities')" data-tab="activities" class="tab-inactive px-4 py-2 rounded-lg text-sm font-600 whitespace-nowrap transition-all"> <i data-lucide="terminal" style="width:14px;height:14px;display:inline;vertical-align:-2px;"></i> Activities </button> <button onclick="switchTab('resources')" data-tab="resources" class="tab-inactive px-4 py-2 rounded-lg text-sm font-600 whitespace-nowrap transition-all"> <i data-lucide="link" style="width:14px;height:14px;display:inline;vertical-align:-2px;"></i> Free Platforms </button> <button onclick="switchTab('quiz')" data-tab="quiz" class="tab-inactive px-4 py-2 rounded-lg text-sm font-600 whitespace-nowrap transition-all"> <i data-lucide="help-circle" style="width:14px;height:14px;display:inline;vertical-align:-2px;"></i> Quiz </button>
+    </div>
+   </nav><!-- Content Area -->
+   <main class="max-w-5xl mx-auto px-4 py-8"><!-- DISCUSSION TAB -->
+    <section id="tab-discussion" class="tab-content space-y-8"><!-- What is Ethical Hacking -->
+     <div class="card-glow rounded-xl p-6 md:p-8" style="background: var(--surface); border: 1px solid rgba(255,255,255,0.06);">
+      <div class="flex items-center gap-3 mb-5">
+       <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: rgba(0,255,136,0.15);"><i data-lucide="shield" style="color: var(--primary-action); width:20px; height:20px;"></i>
+       </div>
+       <h3 class="text-2xl font-700">What is Ethical Hacking?</h3>
+      </div>
+      <p class="leading-relaxed opacity-90 mb-4">Ethical hacking (also known as <strong>penetration testing</strong> or <strong>white-hat hacking</strong>) is the practice of deliberately probing computer systems, networks, and applications for security vulnerabilities — <em>with the explicit permission of the owner</em>. The goal is to identify and fix weaknesses before malicious hackers can exploit them.</p>
+      <p class="leading-relaxed opacity-90 mb-4">Unlike malicious hackers (black hats), ethical hackers operate within legal boundaries and follow a strict code of conduct. They use the <strong>same tools and techniques</strong> as attackers but with a defensive purpose.</p>
+      <div class="mono text-sm p-4 rounded-lg mt-4" style="background: var(--bg); border-left: 3px solid var(--primary-action);"><span style="color: var(--primary-action);">KEY PRINCIPLE:</span> "To catch a thief, you must think like a thief — but act like a guardian."
+      </div>
+     </div><!-- Types of Hackers -->
+     <div class="card-glow rounded-xl p-6 md:p-8" style="background: var(--surface); border: 1px solid rgba(255,255,255,0.06);">
+      <div class="flex items-center gap-3 mb-5">
+       <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: rgba(124,92,252,0.15);"><i data-lucide="users" style="color: var(--secondary-action); width:20px; height:20px;"></i>
+       </div>
+       <h3 class="text-2xl font-700">Types of Hackers</h3>
+      </div>
+      <div class="grid md:grid-cols-3 gap-4">
+       <div class="p-5 rounded-lg" style="background: var(--bg); border: 1px solid rgba(0,255,136,0.2);">
+        <div class="text-3xl mb-2">
+         🤍
+        </div>
+        <h4 class="font-700 mb-2" style="color: var(--primary-action);">White Hat</h4>
+        <p class="text-sm opacity-80">Authorized security professionals who test systems with permission. They work for organizations or as consultants to improve security defenses.</p>
+       </div>
+       <div class="p-5 rounded-lg" style="background: var(--bg); border: 1px solid rgba(128,128,128,0.3);">
+        <div class="text-3xl mb-2">
+         🩶
+        </div>
+        <h4 class="font-700 mb-2 opacity-70">Grey Hat</h4>
+        <p class="text-sm opacity-80">Operate without explicit permission but without malicious intent. They may report vulnerabilities but sometimes violate laws or ethical standards.</p>
+       </div>
+       <div class="p-5 rounded-lg" style="background: var(--bg); border: 1px solid rgba(255,68,68,0.2);">
+        <div class="text-3xl mb-2">
+         🖤
+        </div>
+        <h4 class="font-700 mb-2" style="color: #ff6b6b;">Black Hat</h4>
+        <p class="text-sm opacity-80">Malicious hackers who exploit vulnerabilities for personal gain, data theft, or disruption. Their activities are illegal and unethical.</p>
+       </div>
+      </div>
+      <div class="grid md:grid-cols-3 gap-4 mt-4">
+       <div class="p-5 rounded-lg" style="background: var(--bg); border: 1px solid rgba(0,168,255,0.2);">
+        <div class="text-3xl mb-2">
+         📜
+        </div>
+        <h4 class="font-700 mb-2" style="color: #00a8ff;">Script Kiddie</h4>
+        <p class="text-sm opacity-80">Inexperienced individuals who use pre-made hacking tools without understanding the underlying concepts. Often cause unintended damage.</p>
+       </div>
+       <div class="p-5 rounded-lg" style="background: var(--bg); border: 1px solid rgba(255,200,0,0.2);">
+        <div class="text-3xl mb-2">
+         ✊
+        </div>
+        <h4 class="font-700 mb-2" style="color: #ffc800;">Hacktivist</h4>
+        <p class="text-sm opacity-80">Hackers motivated by political or social causes. Groups like Anonymous use hacking to promote ideological agendas or protest injustice.</p>
+       </div>
+       <div class="p-5 rounded-lg" style="background: var(--bg); border: 1px solid rgba(255,100,200,0.2);">
+        <div class="text-3xl mb-2">
+         🏛️
+        </div>
+        <h4 class="font-700 mb-2" style="color: #ff64c8;">State-Sponsored</h4>
+        <p class="text-sm opacity-80">Government-backed hackers conducting cyber espionage, intelligence gathering, or cyber warfare against other nations or organizations.</p>
+       </div>
+      </div>
+     </div><!-- Ethical Hacking Methodology -->
+     <div class="card-glow rounded-xl p-6 md:p-8" style="background: var(--surface); border: 1px solid rgba(255,255,255,0.06);">
+      <div class="flex items-center gap-3 mb-5">
+       <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: rgba(0,255,136,0.15);"><i data-lucide="git-branch" style="color: var(--primary-action); width:20px; height:20px;"></i>
+       </div>
+       <h3 class="text-2xl font-700">The 5 Phases of Ethical Hacking</h3>
+      </div>
+      <div class="space-y-4" id="phases-list">
+       <div class="flex gap-4 items-start p-4 rounded-lg" style="background: var(--bg);">
+        <div class="mono font-700 text-lg w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background: var(--primary-action); color: var(--bg);">
+         1
+        </div>
+        <div>
+         <h4 class="font-700 mb-1">Reconnaissance (Footprinting)</h4>
+         <p class="text-sm opacity-80">Gathering information about the target — domain names, IP ranges, employee info, tech stack. Uses tools like WHOIS, Shodan, Google Dorking, and social media OSINT.</p>
+        </div>
+       </div>
+       <div class="flex gap-4 items-start p-4 rounded-lg" style="background: var(--bg);">
+        <div class="mono font-700 text-lg w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background: var(--primary-action); color: var(--bg);">
+         2
+        </div>
+        <div>
+         <h4 class="font-700 mb-1">Scanning &amp; Enumeration</h4>
+         <p class="text-sm opacity-80">Actively probing the target for open ports, services, and vulnerabilities. Tools include Nmap, Nessus, Nikto, and OpenVAS. Identifies potential entry points.</p>
+        </div>
+       </div>
+       <div class="flex gap-4 items-start p-4 rounded-lg" style="background: var(--bg);">
+        <div class="mono font-700 text-lg w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background: var(--primary-action); color: var(--bg);">
+         3
+        </div>
+        <div>
+         <h4 class="font-700 mb-1">Gaining Access (Exploitation)</h4>
+         <p class="text-sm opacity-80">Exploiting discovered vulnerabilities to gain entry. This may involve SQL injection, XSS, buffer overflows, or password cracking using Metasploit, Burp Suite, or Hydra.</p>
+        </div>
+       </div>
+       <div class="flex gap-4 items-start p-4 rounded-lg" style="background: var(--bg);">
+        <div class="mono font-700 text-lg w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background: var(--primary-action); color: var(--bg);">
+         4
+        </div>
+        <div>
+         <h4 class="font-700 mb-1">Maintaining Access</h4>
+         <p class="text-sm opacity-80">Testing if persistent access can be maintained through backdoors, rootkits, or trojans. Simulates advanced persistent threats (APTs) to test detection capabilities.</p>
+        </div>
+       </div>
+       <div class="flex gap-4 items-start p-4 rounded-lg" style="background: var(--bg);">
+        <div class="mono font-700 text-lg w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background: var(--primary-action); color: var(--bg);">
+         5
+        </div>
+        <div>
+         <h4 class="font-700 mb-1">Covering Tracks &amp; Reporting</h4>
+         <p class="text-sm opacity-80">Documenting all findings, vulnerabilities, and evidence. Creating a detailed report with risk assessments and remediation recommendations for the client.</p>
+        </div>
+       </div>
+      </div>
+     </div><!-- Common Attack Vectors -->
+     <div class="card-glow rounded-xl p-6 md:p-8" style="background: var(--surface); border: 1px solid rgba(255,255,255,0.06);">
+      <div class="flex items-center gap-3 mb-5">
+       <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: rgba(255,68,68,0.15);"><i data-lucide="zap" style="color: #ff6b6b; width:20px; height:20px;"></i>
+       </div>
+       <h3 class="text-2xl font-700">Common Attack Vectors</h3>
+      </div>
+      <div class="grid md:grid-cols-2 gap-4">
+       <div class="p-4 rounded-lg" style="background: var(--bg);">
+        <h4 class="font-700 mb-2 mono text-sm" style="color: var(--primary-action);">SQL Injection (SQLi)</h4>
+        <p class="text-sm opacity-80 mb-2">Inserting malicious SQL code into input fields to manipulate databases. Can extract, modify, or delete data.</p><code class="mono text-xs p-2 rounded block" style="background: rgba(0,255,136,0.05); color: var(--primary-action);">' OR '1'='1' --</code>
+       </div>
+       <div class="p-4 rounded-lg" style="background: var(--bg);">
+        <h4 class="font-700 mb-2 mono text-sm" style="color: var(--primary-action);">Cross-Site Scripting (XSS)</h4>
+        <p class="text-sm opacity-80 mb-2">Injecting client-side scripts into web pages viewed by other users. Can steal cookies, sessions, or redirect users.</p><code class="mono text-xs p-2 rounded block" style="background: rgba(0,255,136,0.05); color: var(--primary-action);">&lt;script&gt;document.cookie&lt;/script&gt;</code>
+       </div>
+       <div class="p-4 rounded-lg" style="background: var(--bg);">
+        <h4 class="font-700 mb-2 mono text-sm" style="color: var(--primary-action);">Phishing</h4>
+        <p class="text-sm opacity-80">Social engineering attack using fake emails, websites, or messages to trick users into revealing credentials or installing malware. #1 attack vector worldwide.</p>
+       </div>
+       <div class="p-4 rounded-lg" style="background: var(--bg);">
+        <h4 class="font-700 mb-2 mono text-sm" style="color: var(--primary-action);">Man-in-the-Middle (MitM)</h4>
+        <p class="text-sm opacity-80">Intercepting communications between two parties. Attackers can eavesdrop, modify data, or inject malicious content using tools like Wireshark or Ettercap.</p>
+       </div>
+       <div class="p-4 rounded-lg" style="background: var(--bg);">
+        <h4 class="font-700 mb-2 mono text-sm" style="color: var(--primary-action);">Brute Force Attacks</h4>
+        <p class="text-sm opacity-80">Systematically trying every possible password combination. Dictionary attacks use wordlists. Tools: Hydra, John the Ripper, Hashcat.</p>
+       </div>
+       <div class="p-4 rounded-lg" style="background: var(--bg);">
+        <h4 class="font-700 mb-2 mono text-sm" style="color: var(--primary-action);">DDoS Attacks</h4>
+        <p class="text-sm opacity-80">Overwhelming a target with massive traffic from multiple sources, causing service unavailability. Botnets are commonly used to amplify attacks.</p>
+       </div>
+      </div>
+     </div><!-- Legal & Ethical Framework -->
+     <div class="card-glow rounded-xl p-6 md:p-8" style="background: var(--surface); border: 1px solid rgba(255,255,255,0.06);">
+      <div class="flex items-center gap-3 mb-5">
+       <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: rgba(124,92,252,0.15);"><i data-lucide="scale" style="color: var(--secondary-action); width:20px; height:20px;"></i>
+       </div>
+       <h3 class="text-2xl font-700">Legal &amp; Ethical Framework</h3>
+      </div>
+      <div class="space-y-3">
+       <div class="p-4 rounded-lg" style="background: var(--bg); border-left: 3px solid var(--secondary-action);">
+        <h4 class="font-700 mb-1">Always Get Written Permission</h4>
+        <p class="text-sm opacity-80">A formal agreement (Rules of Engagement) must be signed before any testing begins. This defines scope, methods, timelines, and liability.</p>
+       </div>
+       <div class="p-4 rounded-lg" style="background: var(--bg); border-left: 3px solid var(--secondary-action);">
+        <h4 class="font-700 mb-1">Philippine Laws: RA 10175 (Cybercrime Prevention Act)</h4>
+        <p class="text-sm opacity-80">Covers illegal access, data interference, system interference, misuse of devices, and cyber-squatting. Penalties include imprisonment and fines.</p>
+       </div>
+       <div class="p-4 rounded-lg" style="background: var(--bg); border-left: 3px solid var(--secondary-action);">
+        <h4 class="font-700 mb-1">International: CFAA (USA) &amp; Computer Misuse Act (UK)</h4>
+        <p class="text-sm opacity-80">Unauthorized access to computer systems is illegal worldwide. Even well-intentioned hacking without permission can result in criminal charges.</p>
+       </div>
+       <div class="p-4 rounded-lg" style="background: var(--bg); border-left: 3px solid var(--primary-action);">
+        <h4 class="font-700 mb-1" style="color: var(--primary-action);">⚠️ Golden Rule</h4>
+        <p class="text-sm opacity-80">NEVER test on systems you don't own or have explicit written authorization to test. Use dedicated practice platforms only!</p>
+       </div>
+      </div>
+     </div><!-- Essential Tools -->
+     <div class="card-glow rounded-xl p-6 md:p-8" style="background: var(--surface); border: 1px solid rgba(255,255,255,0.06);">
+      <div class="flex items-center gap-3 mb-5">
+       <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: rgba(0,255,136,0.15);"><i data-lucide="wrench" style="color: var(--primary-action); width:20px; height:20px;"></i>
+       </div>
+       <h3 class="text-2xl font-700">Essential Ethical Hacking Tools</h3>
+      </div>
+      <div class="grid md:grid-cols-2 gap-3">
+       <div class="p-4 rounded-lg flex items-start gap-3" style="background: var(--bg);"><span class="text-xl">🐉</span>
+        <div>
+         <h4 class="font-700 mono text-sm">Kali Linux</h4>
+         <p class="text-xs opacity-70 mt-1">The most popular penetration testing OS, pre-loaded with 600+ security tools.</p>
+        </div>
+       </div>
+       <div class="p-4 rounded-lg flex items-start gap-3" style="background: var(--bg);"><span class="text-xl">🔍</span>
+        <div>
+         <h4 class="font-700 mono text-sm">Nmap</h4>
+         <p class="text-xs opacity-70 mt-1">Network scanner for discovering hosts, services, and vulnerabilities on a network.</p>
+        </div>
+       </div>
+       <div class="p-4 rounded-lg flex items-start gap-3" style="background: var(--bg);"><span class="text-xl">💉</span>
+        <div>
+         <h4 class="font-700 mono text-sm">Metasploit</h4>
+         <p class="text-xs opacity-70 mt-1">Framework for developing and executing exploit code against remote targets.</p>
+        </div>
+       </div>
+       <div class="p-4 rounded-lg flex items-start gap-3" style="background: var(--bg);"><span class="text-xl">🌐</span>
+        <div>
+         <h4 class="font-700 mono text-sm">Burp Suite</h4>
+         <p class="text-xs opacity-70 mt-1">Web vulnerability scanner and proxy for testing web application security.</p>
+        </div>
+       </div>
+       <div class="p-4 rounded-lg flex items-start gap-3" style="background: var(--bg);"><span class="text-xl">🦈</span>
+        <div>
+         <h4 class="font-700 mono text-sm">Wireshark</h4>
+         <p class="text-xs opacity-70 mt-1">Network protocol analyzer for capturing and inspecting network traffic in real-time.</p>
+        </div>
+       </div>
+       <div class="p-4 rounded-lg flex items-start gap-3" style="background: var(--bg);"><span class="text-xl">🔓</span>
+        <div>
+         <h4 class="font-700 mono text-sm">John the Ripper</h4>
+         <p class="text-xs opacity-70 mt-1">Password cracking tool supporting hundreds of hash and cipher types.</p>
+        </div>
+       </div>
+      </div>
+     </div>
+    </section><!-- TRIVIA TAB -->
+    <section id="tab-trivia" class="tab-content hidden">
+     <h3 class="text-2xl font-700 mb-6 flex items-center gap-3"><i data-lucide="lightbulb" style="color: var(--primary-action);"></i> Hacking Trivia — Tap to Reveal!</h3>
+     <div class="grid md:grid-cols-2 gap-4" id="trivia-grid"></div>
+    </section><!-- ACTIVITIES TAB -->
+    <section id="tab-activities" class="tab-content hidden space-y-6">
+     <h3 class="text-2xl font-700 mb-2 flex items-center gap-3"><i data-lucide="terminal" style="color: var(--primary-action);"></i> Hands-On Activities</h3>
+     <p class="opacity-70 mb-6">Practice these exercises using the free platforms listed in the "Free Platforms" tab. All activities are legal and designed for learning environments.</p><!-- Activity 1 -->
+     <div class="card-glow rounded-xl p-6" style="background: var(--surface); border: 1px solid rgba(255,255,255,0.06);">
+      <div class="flex items-center justify-between mb-4">
+       <div class="flex items-center gap-3"><span class="mono text-xs px-3 py-1 rounded-full" style="background: rgba(0,255,136,0.15); color: var(--primary-action);">BEGINNER</span>
+        <h4 class="font-700">Activity 1: SQL Injection Lab</h4>
+       </div>
+      </div>
+      <p class="text-sm opacity-80 mb-3"><strong>Platform:</strong> PortSwigger Web Security Academy (free)</p>
+      <p class="text-sm opacity-80 mb-3"><strong>Objective:</strong> Complete the "SQL Injection" learning path. Learn how to extract hidden data, subvert application logic, and perform UNION attacks.</p>
+      <div class="mono text-xs p-4 rounded-lg" style="background: var(--bg);">
+       <p style="color: var(--primary-action);">Steps:</p>
+       <p class="mt-1 opacity-80">1. Go to portswigger.net/web-security/sql-injection</p>
+       <p class="opacity-80">2. Start with "Lab: SQL injection vulnerability in WHERE clause"</p>
+       <p class="opacity-80">3. Try input: <span style="color: var(--primary-action);">' OR 1=1 --</span></p>
+       <p class="opacity-80">4. Observe how the query is manipulated</p>
+       <p class="opacity-80">5. Document your findings</p>
+      </div>
+     </div><!-- Activity 2 -->
+     <div class="card-glow rounded-xl p-6" style="background: var(--surface); border: 1px solid rgba(255,255,255,0.06);">
+      <div class="flex items-center justify-between mb-4">
+       <div class="flex items-center gap-3"><span class="mono text-xs px-3 py-1 rounded-full" style="background: rgba(0,255,136,0.15); color: var(--primary-action);">BEGINNER</span>
+        <h4 class="font-700">Activity 2: XSS Challenge</h4>
+       </div>
+      </div>
+      <p class="text-sm opacity-80 mb-3"><strong>Platform:</strong> TryHackMe — "XSS" Room (free)</p>
+      <p class="text-sm opacity-80 mb-3"><strong>Objective:</strong> Learn the three types of XSS (Reflected, Stored, DOM-based) and practice injecting scripts into vulnerable web applications.</p>
+      <div class="mono text-xs p-4 rounded-lg" style="background: var(--bg);">
+       <p style="color: var(--primary-action);">Steps:</p>
+       <p class="mt-1 opacity-80">1. Create a free TryHackMe account</p>
+       <p class="opacity-80">2. Search for "XSS" room and start it</p>
+       <p class="opacity-80">3. Follow guided challenges for each XSS type</p>
+       <p class="opacity-80">4. Try crafting your own payloads</p>
+       <p class="opacity-80">5. Screenshot each completed challenge</p>
+      </div>
+     </div><!-- Activity 3 -->
+     <div class="card-glow rounded-xl p-6" style="background: var(--surface); border: 1px solid rgba(255,255,255,0.06);">
+      <div class="flex items-center justify-between mb-4">
+       <div class="flex items-center gap-3"><span class="mono text-xs px-3 py-1 rounded-full" style="background: rgba(124,92,252,0.15); color: var(--secondary-action);">INTERMEDIATE</span>
+        <h4 class="font-700">Activity 3: Network Scanning with Nmap</h4>
+       </div>
+      </div>
+      <p class="text-sm opacity-80 mb-3"><strong>Platform:</strong> TryHackMe — "Nmap" Room (free)</p>
+      <p class="text-sm opacity-80 mb-3"><strong>Objective:</strong> Learn to scan networks, identify open ports, detect services, and understand the information an attacker can discover about a target.</p>
+      <div class="mono text-xs p-4 rounded-lg" style="background: var(--bg);">
+       <p style="color: var(--primary-action);">Key Commands to Practice:</p>
+       <p class="mt-1 opacity-80">$ nmap -sV &lt;target-ip&gt; <span class="opacity-50"># service version detection</span></p>
+       <p class="opacity-80">$ nmap -sC &lt;target-ip&gt; <span class="opacity-50"># default scripts</span></p>
+       <p class="opacity-80">$ nmap -O &lt;target-ip&gt; <span class="opacity-50"># OS detection</span></p>
+       <p class="opacity-80">$ nmap -A &lt;target-ip&gt; <span class="opacity-50"># aggressive scan</span></p>
+      </div>
+     </div><!-- Activity 4 -->
+     <div class="card-glow rounded-xl p-6" style="background: var(--surface); border: 1px solid rgba(255,255,255,0.06);">
+      <div class="flex items-center justify-between mb-4">
+       <div class="flex items-center gap-3"><span class="mono text-xs px-3 py-1 rounded-full" style="background: rgba(124,92,252,0.15); color: var(--secondary-action);">INTERMEDIATE</span>
+        <h4 class="font-700">Activity 4: Capture The Flag (CTF)</h4>
+       </div>
+      </div>
+      <p class="text-sm opacity-80 mb-3"><strong>Platform:</strong> PicoCTF (free, by Carnegie Mellon)</p>
+      <p class="text-sm opacity-80 mb-3"><strong>Objective:</strong> Solve cybersecurity puzzles across categories: web exploitation, cryptography, forensics, reverse engineering, and binary exploitation.</p>
+      <div class="mono text-xs p-4 rounded-lg" style="background: var(--bg);">
+       <p style="color: var(--primary-action);">Challenge Categories:</p>
+       <p class="mt-1 opacity-80">🌐 Web Exploitation — find hidden flags in websites</p>
+       <p class="opacity-80">🔐 Cryptography — decode encrypted messages</p>
+       <p class="opacity-80">🔬 Forensics — analyze files and network captures</p>
+       <p class="opacity-80">⚙️ Reverse Engineering — understand compiled programs</p>
+      </div>
+     </div><!-- Activity 5 -->
+     <div class="card-glow rounded-xl p-6" style="background: var(--surface); border: 1px solid rgba(255,255,255,0.06);">
+      <div class="flex items-center justify-between mb-4">
+       <div class="flex items-center gap-3"><span class="mono text-xs px-3 py-1 rounded-full" style="background: rgba(0,255,136,0.15); color: var(--primary-action);">BEGINNER</span>
+        <h4 class="font-700">Activity 5: Password Cracking Simulation</h4>
+       </div>
+      </div>
+      <p class="text-sm opacity-80 mb-3"><strong>Platform:</strong> Interactive exercise below!</p>
+      <p class="text-sm opacity-80 mb-3"><strong>Objective:</strong> Understand how brute force and dictionary attacks work by trying to "crack" a simulated password.</p>
+      <div class="p-4 rounded-lg" style="background: var(--bg);">
+       <p class="mono text-xs mb-3" style="color: var(--primary-action);">🔐 Simulated Password Cracker</p>
+       <p class="text-sm opacity-70 mb-3">The hidden password is a common 4-letter word. Try to guess it! (Hint: it's an animal)</p>
+       <div class="flex gap-2 mb-3"><input type="text" id="crack-input" placeholder="Enter your guess..." class="flex-1 px-4 py-2 rounded-lg mono text-sm" style="background: var(--surface); border: 1px solid rgba(255,255,255,0.1); color: var(--text); outline: none;" maxlength="10"> <button onclick="tryPassword()" class="px-5 py-2 rounded-lg mono text-sm font-600" style="background: var(--primary-action); color: var(--bg);">CRACK</button>
+       </div>
+       <div id="crack-result" class="mono text-xs"></div>
+       <div id="crack-attempts" class="mono text-xs mt-2 opacity-50"></div>
+      </div>
+     </div><!-- Activity 6 -->
+     <div class="card-glow rounded-xl p-6" style="background: var(--surface); border: 1px solid rgba(255,255,255,0.06);">
+      <div class="flex items-center justify-between mb-4">
+       <div class="flex items-center gap-3"><span class="mono text-xs px-3 py-1 rounded-full" style="background: rgba(0,255,136,0.15); color: var(--primary-action);">BEGINNER</span>
+        <h4 class="font-700">Activity 6: Phishing Email Analysis</h4>
+       </div>
+      </div>
+      <p class="text-sm opacity-80 mb-3"><strong>Objective:</strong> Identify red flags in a suspicious email. Click on each element you think is suspicious!</p>
+      <div class="p-4 rounded-lg" style="background: #fff; color: #333; border-radius: 8px;">
+       <div class="border-b pb-3 mb-3" style="border-color: #e5e7eb;">
+        <p class="text-xs opacity-50">From:</p>
+        <p class="text-sm phish-item cursor-pointer hover:bg-yellow-100 px-1 rounded" onclick="flagPhish(this, 'Suspicious sender: uses random numbers and generic domain!')" style="color: #333;">security-update8291@g00gle-support.com</p>
+        <p class="text-xs opacity-50 mt-2">Subject:</p>
+        <p class="text-sm phish-item cursor-pointer hover:bg-yellow-100 px-1 rounded font-bold" onclick="flagPhish(this, 'Urgency tactics: creates panic to bypass critical thinking!')" style="color: #333;">⚠️ URGENT: Your account will be suspended in 24 hours!</p>
+       </div>
+       <div class="text-sm space-y-2" style="color: #333;">
+        <p>Dear Valued Customer,</p>
+        <p class="phish-item cursor-pointer hover:bg-yellow-100 px-1 rounded" onclick="flagPhish(this, 'Generic greeting: legitimate services use your actual name!')">We have detected unusual activity on your account. Your account will be permanently suspended unless you verify your identity immediately.</p>
+        <p class="phish-item cursor-pointer hover:bg-yellow-100 px-1 rounded" onclick="flagPhish(this, 'Suspicious link: hover to check — URL doesn\'t match the claimed service!')" style="color: #1a73e8; text-decoration: underline; cursor: pointer;">Click here to verify your account now → http://g00gle-verify.suspicious-site.ru/login</p>
+        <p class="phish-item cursor-pointer hover:bg-yellow-100 px-1 rounded" onclick="flagPhish(this, 'Pressure tactic with threat: legitimate companies don\'t threaten permanent deletion!')">Failure to verify within 24 hours will result in permanent data loss.</p>
+        <p class="mt-3">Regards,<br><span class="phish-item cursor-pointer hover:bg-yellow-100 px-1 rounded" onclick="flagPhish(this, 'Vague signature: no specific employee name, department, or contact info!')">Google Security Team</span></p>
+       </div>
+      </div>
+      <div id="phish-results" class="mt-3 space-y-2"></div>
+      <p class="text-xs opacity-50 mt-3 mono">Found <span id="phish-count">0</span>/6 red flags</p>
+     </div>
+    </section><!-- RESOURCES TAB -->
+    <section id="tab-resources" class="tab-content hidden space-y-6">
+     <h3 class="text-2xl font-700 mb-2 flex items-center gap-3"><i data-lucide="link" style="color: var(--primary-action);"></i> Free Ethical Hacking Platforms</h3>
+     <p class="opacity-70 mb-6">These platforms are 100% legal and designed specifically for learning cybersecurity. No permission needed — hack away!</p>
+     <div class="space-y-4">
+      <div class="card-glow rounded-xl p-6" style="background: var(--surface); border: 1px solid rgba(255,255,255,0.06);">
+       <div class="flex items-start justify-between flex-wrap gap-3">
+        <div>
+         <h4 class="font-700 text-lg flex items-center gap-2">🎯 TryHackMe</h4>
+         <p class="mono text-xs mt-1 opacity-60">tryhackme.com</p>
+        </div><span class="mono text-xs px-3 py-1 rounded-full" style="background: rgba(0,255,136,0.15); color: var(--primary-action);">⭐ HIGHLY RECOMMENDED</span>
+       </div>
+       <p class="text-sm opacity-80 mt-3">Browser-based learning with guided rooms and learning paths. Perfect for beginners. Free tier includes many rooms. Provides virtual machines — no setup needed!</p>
+       <div class="flex flex-wrap gap-2 mt-3"><span class="text-xs px-2 py-1 rounded" style="background: var(--bg);">Beginner Friendly</span> <span class="text-xs px-2 py-1 rounded" style="background: var(--bg);">Browser-Based</span> <span class="text-xs px-2 py-1 rounded" style="background: var(--bg);">Guided Learning</span>
+       </div>
+      </div>
+      <div class="card-glow rounded-xl p-6" style="background: var(--surface); border: 1px solid rgba(255,255,255,0.06);">
+       <div class="flex items-start justify-between flex-wrap gap-3">
+        <div>
+         <h4 class="font-700 text-lg flex items-center gap-2">🔬 PortSwigger Web Security Academy</h4>
+         <p class="mono text-xs mt-1 opacity-60">portswigger.net/web-security</p>
+        </div><span class="mono text-xs px-3 py-1 rounded-full" style="background: rgba(0,255,136,0.15); color: var(--primary-action);">100% FREE</span>
+       </div>
+       <p class="text-sm opacity-80 mt-3">Created by the makers of Burp Suite. The gold standard for learning web application security. Covers SQL injection, XSS, CSRF, SSRF, and more with interactive labs.</p>
+       <div class="flex flex-wrap gap-2 mt-3"><span class="text-xs px-2 py-1 rounded" style="background: var(--bg);">Web Security</span> <span class="text-xs px-2 py-1 rounded" style="background: var(--bg);">Interactive Labs</span> <span class="text-xs px-2 py-1 rounded" style="background: var(--bg);">Free Forever</span>
+       </div>
+      </div>
+      <div class="card-glow rounded-xl p-6" style="background: var(--surface); border: 1px solid rgba(255,255,255,0.06);">
+       <div class="flex items-start justify-between flex-wrap gap-3">
+        <div>
+         <h4 class="font-700 text-lg flex items-center gap-2">🏴 Hack The Box</h4>
+         <p class="mono text-xs mt-1 opacity-60">hackthebox.com</p>
+        </div><span class="mono text-xs px-3 py-1 rounded-full" style="background: rgba(124,92,252,0.15); color: var(--secondary-action);">FREE TIER</span>
+       </div>
+       <p class="text-sm opacity-80 mt-3">Real-world penetration testing labs. More challenging — great for intermediate to advanced learners. Free tier includes retired machines and starting point labs.</p>
+       <div class="flex flex-wrap gap-2 mt-3"><span class="text-xs px-2 py-1 rounded" style="background: var(--bg);">Real Machines</span> <span class="text-xs px-2 py-1 rounded" style="background: var(--bg);">Community</span> <span class="text-xs px-2 py-1 rounded" style="background: var(--bg);">Intermediate+</span>
+       </div>
+      </div>
+      <div class="card-glow rounded-xl p-6" style="background: var(--surface); border: 1px solid rgba(255,255,255,0.06);">
+       <div class="flex items-start justify-between flex-wrap gap-3">
+        <div>
+         <h4 class="font-700 text-lg flex items-center gap-2">🏆 PicoCTF</h4>
+         <p class="mono text-xs mt-1 opacity-60">picoctf.org</p>
+        </div><span class="mono text-xs px-3 py-1 rounded-full" style="background: rgba(0,255,136,0.15); color: var(--primary-action);">100% FREE</span>
+       </div>
+       <p class="text-sm opacity-80 mt-3">By Carnegie Mellon University. Gamified CTF challenges perfect for students. Covers web exploitation, cryptography, forensics, and reverse engineering. Great for competitions!</p>
+       <div class="flex flex-wrap gap-2 mt-3"><span class="text-xs px-2 py-1 rounded" style="background: var(--bg);">Student-Focused</span> <span class="text-xs px-2 py-1 rounded" style="background: var(--bg);">Gamified</span> <span class="text-xs px-2 py-1 rounded" style="background: var(--bg);">CTF Challenges</span>
+       </div>
+      </div>
+      <div class="card-glow rounded-xl p-6" style="background: var(--surface); border: 1px solid rgba(255,255,255,0.06);">
+       <div class="flex items-start justify-between flex-wrap gap-3">
+        <div>
+         <h4 class="font-700 text-lg flex items-center gap-2">🐝 OWASP WebGoat</h4>
+         <p class="mono text-xs mt-1 opacity-60">owasp.org/www-project-webgoat</p>
+        </div><span class="mono text-xs px-3 py-1 rounded-full" style="background: rgba(0,255,136,0.15); color: var(--primary-action);">100% FREE</span>
+       </div>
+       <p class="text-sm opacity-80 mt-3">A deliberately insecure web application maintained by OWASP. Teaches web security through interactive lessons. Install locally and practice at your own pace.</p>
+       <div class="flex flex-wrap gap-2 mt-3"><span class="text-xs px-2 py-1 rounded" style="background: var(--bg);">Self-Hosted</span> <span class="text-xs px-2 py-1 rounded" style="background: var(--bg);">OWASP Top 10</span> <span class="text-xs px-2 py-1 rounded" style="background: var(--bg);">Open Source</span>
+       </div>
+      </div>
+      <div class="card-glow rounded-xl p-6" style="background: var(--surface); border: 1px solid rgba(255,255,255,0.06);">
+       <div class="flex items-start justify-between flex-wrap gap-3">
+        <div>
+         <h4 class="font-700 text-lg flex items-center gap-2">🎮 OverTheWire: Bandit</h4>
+         <p class="mono text-xs mt-1 opacity-60">overthewire.org/wargames/bandit</p>
+        </div><span class="mono text-xs px-3 py-1 rounded-full" style="background: rgba(0,255,136,0.15); color: var(--primary-action);">100% FREE</span>
+       </div>
+       <p class="text-sm opacity-80 mt-3">Learn Linux command line and basic security concepts through a wargame format. Perfect starting point for students new to the command line. 34 progressive levels.</p>
+       <div class="flex flex-wrap gap-2 mt-3"><span class="text-xs px-2 py-1 rounded" style="background: var(--bg);">Linux Basics</span> <span class="text-xs px-2 py-1 rounded" style="background: var(--bg);">SSH Access</span> <span class="text-xs px-2 py-1 rounded" style="background: var(--bg);">Progressive</span>
+       </div>
+      </div>
+     </div>
+    </section><!-- QUIZ TAB -->
+    <section id="tab-quiz" class="tab-content hidden">
+     <h3 class="text-2xl font-700 mb-2 flex items-center gap-3"><i data-lucide="help-circle" style="color: var(--primary-action);"></i> Knowledge Check Quiz</h3>
+     <p class="opacity-70 mb-6">Test your understanding of ethical hacking concepts!</p>
+     <div id="quiz-container" class="space-y-6"></div>
+     <div id="quiz-score" class="hidden mt-8 text-center p-8 rounded-xl" style="background: var(--surface); border: 1px solid rgba(0,255,136,0.3);">
+     </div>
+    </section>
+   </main><!-- Footer -->
+   <footer class="text-center py-8 px-4 opacity-40 text-sm">
+    <p id="el-footer">Presented by <strong>Audrey E. Alinea, MIT</strong> — Ethical Hacking Workshop</p>
+    <p class="mt-1 text-xs">Remember: Hack responsibly. Always get permission. Stay curious. 🛡️</p>
+   </footer>
+  </div>
+  <script>
+    // Config
+    const defaultConfig = {
+      speaker_name: 'Audrey E. Alinea, MIT',
+      workshop_title: 'Ethical Hacking',
+      background_color: '#0a0e17',
+      surface_color: '#131a2b',
+      text_color: '#e0e6f0',
+      primary_action_color: '#00ff88',
+      secondary_action_color: '#7c5cfc',
+      font_family: 'Outfit',
+      font_size: 16
+    };
+
+    // Element SDK
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange: async (config) => {
+          const c = { ...defaultConfig, ...config };
+          document.documentElement.style.setProperty('--bg', c.background_color);
+          document.documentElement.style.setProperty('--surface', c.surface_color);
+          document.documentElement.style.setProperty('--text', c.text_color);
+          document.documentElement.style.setProperty('--primary-action', c.primary_action_color);
+          document.documentElement.style.setProperty('--secondary-action', c.secondary_action_color);
+          document.body.style.color = c.text_color;
+          document.body.style.background = c.background_color;
+          document.body.style.fontFamily = `${c.font_family}, Outfit, sans-serif`;
+
+          const base = c.font_size || 16;
+          document.getElementById('el-title').style.fontSize = `${base * 2.5}px`;
+          document.getElementById('el-subtitle').style.fontSize = `${base * 1.3}px`;
+          document.getElementById('el-title').textContent = c.workshop_title || defaultConfig.workshop_title;
+          document.getElementById('el-speaker').textContent = c.speaker_name || defaultConfig.speaker_name;
+          document.getElementById('el-footer').innerHTML = `Presented by <strong>${c.speaker_name || defaultConfig.speaker_name}</strong> — ${c.workshop_title || defaultConfig.workshop_title} Workshop`;
+        },
+        mapToCapabilities: (config) => ({
+          recolorables: [
+            { get: () => config.background_color || defaultConfig.background_color, set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
+            { get: () => config.surface_color || defaultConfig.surface_color, set: (v) => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); } },
+            { get: () => config.text_color || defaultConfig.text_color, set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
+            { get: () => config.primary_action_color || defaultConfig.primary_action_color, set: (v) => { config.primary_action_color = v; window.elementSdk.setConfig({ primary_action_color: v }); } },
+            { get: () => config.secondary_action_color || defaultConfig.secondary_action_color, set: (v) => { config.secondary_action_color = v; window.elementSdk.setConfig({ secondary_action_color: v }); } },
+          ],
+          borderables: [],
+          fontEditable: {
+            get: () => config.font_family || defaultConfig.font_family,
+            set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); }
+          },
+          fontSizeable: {
+            get: () => config.font_size || defaultConfig.font_size,
+            set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); }
+          }
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ['speaker_name', config.speaker_name || defaultConfig.speaker_name],
+          ['workshop_title', config.workshop_title || defaultConfig.workshop_title],
+        ])
+      });
+    }
+
+    // Tab Switching
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(s => s.classList.add('hidden'));
+      document.getElementById('tab-' + tab).classList.remove('hidden');
+      document.querySelectorAll('#tab-nav button').forEach(b => {
+        b.classList.remove('tab-active');
+        b.classList.add('tab-inactive');
+      });
+      document.querySelector(`[data-tab="${tab}"]`).classList.remove('tab-inactive');
+      document.querySelector(`[data-tab="${tab}"]`).classList.add('tab-active');
+    }
+
+    // Trivia Data
+    const trivias = [
+      { q: "Who is considered the most famous hacker of all time?", a: "Kevin Mitnick — once the FBI's most wanted hacker, he became a leading cybersecurity consultant. He passed away in 2023." },
+      { q: "What was the first computer virus?", a: "The 'Creeper' virus (1971) — it displayed 'I'm the creeper, catch me if you can!' on ARPANET. 'Reaper' was created to delete it — the first antivirus!" },
+      { q: "How much does cybercrime cost the world annually?", a: "Over $8 TRILLION in 2023 — predicted to reach $10.5 trillion by 2025. That's more than the GDP of Japan!" },
+      { q: "What's the most common password in the world?", a: "'123456' remains the #1 most used password globally, followed by 'password' and '123456789'. It takes less than 1 second to crack!" },
+      { q: "What does 'Zero-Day' mean?", a: "A zero-day vulnerability is a software flaw unknown to the vendor. Attackers have 'zero days' of warning. These can sell for $500K-$2.5M on the black market!" },
+      { q: "What is 'Social Engineering'?", a: "The art of manipulating people into giving up confidential info. 98% of cyber attacks rely on social engineering. The human is always the weakest link!" },
+      { q: "What was the largest data breach ever?", a: "Yahoo (2013) — 3 BILLION accounts compromised. They didn't disclose it until 2016! It reduced Yahoo's sale price by $350 million." },
+      { q: "What is a 'Bug Bounty'?", a: "Companies like Google, Facebook, and Apple pay hackers to find bugs. Google has paid over $50 million in bounties. Top hunters earn $500K+/year!" },
+      { q: "How long does the average breach go undetected?", a: "277 days on average! That's over 9 months of an attacker having access before being discovered. Some APTs persist for years." },
+      { q: "What country has the most hackers?", a: "China, Russia, and the US are the top three. North Korea's 'Lazarus Group' stole over $1.7 billion in crypto in 2022 alone!" },
+    ];
+
+    // Build Trivia Cards
+    const triviaGrid = document.getElementById('trivia-grid');
+    trivias.forEach((t, i) => {
+      const card = document.createElement('div');
+      card.className = 'trivia-card';
+      card.style.height = '220px';
+      card.onclick = () => card.classList.toggle('flipped');
+      card.innerHTML = `
+        <div class="trivia-inner" style="width:100%;height:100%;">
+          <div class="trivia-front" style="background: var(--surface); border: 1px solid rgba(255,255,255,0.06);">
+            <span class="mono text-xs mb-2" style="color: var(--primary-action);">TRIVIA #${i + 1}</span>
+            <p class="font-600">${t.q}</p>
+            <p class="text-xs opacity-40 mt-3 mono">tap to reveal</p>
+          </div>
+          <div class="trivia-back" style="background: linear-gradient(135deg, var(--surface), rgba(0,255,136,0.05)); border: 1px solid rgba(0,255,136,0.2);">
+            <p class="text-sm leading-relaxed">${t.a}</p>
+          </div>
+        </div>`;
+      triviaGrid.appendChild(card);
+    });
+
+    // Password Cracker Game
+    const secretPassword = 'fish';
+    let crackAttempts = 0;
+    function tryPassword() {
+      const input = document.getElementById('crack-input');
+      const result = document.getElementById('crack-result');
+      const attemptsEl = document.getElementById('crack-attempts');
+      const guess = input.value.trim().toLowerCase();
+      if (!guess) return;
+      crackAttempts++;
+      attemptsEl.textContent = `Attempts: ${crackAttempts}`;
+      if (guess === secretPassword) {
+        result.innerHTML = `<span style="color: var(--primary-action);">✅ CRACKED! The password was "${secretPassword}". It took you ${crackAttempts} attempt(s).</span><br><span class="opacity-60">A real brute-force tool tries thousands per second!</span>`;
+        input.disabled = true;
+      } else {
+        const hints = [];
+        if (guess.length === secretPassword.length) hints.push('correct length!');
+        if (guess[0] === secretPassword[0]) hints.push('first letter matches!');
+        result.innerHTML = `<span style="color: #ff6b6b;">❌ "${guess}" is incorrect.</span> ${hints.length ? '<span style="color: var(--primary-action);">' + hints.join(' ') + '</span>' : ''}`;
+      }
+      input.value = '';
+      input.focus();
+    }
+    document.getElementById('crack-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); tryPassword(); } });
+
+    // Phishing Activity
+    let phishFound = 0;
+    function flagPhish(el, msg) {
+      if (el.dataset.flagged) return;
+      el.dataset.flagged = 'true';
+      el.style.background = '#fef3c7';
+      el.style.borderLeft = '3px solid #f59e0b';
+      phishFound++;
+      document.getElementById('phish-count').textContent = phishFound;
+      const div = document.createElement('div');
+      div.className = 'mono text-xs p-2 rounded fade-up';
+      div.style.background = 'rgba(0,255,136,0.1)';
+      div.style.color = 'var(--primary-action)';
+      div.textContent = `🚩 ${msg}`;
+      document.getElementById('phish-results').appendChild(div);
+    }
+
+    // Quiz
+    const quizData = [
+      { q: "What type of hacker has explicit authorization to test systems?", options: ["Black Hat", "Grey Hat", "White Hat", "Script Kiddie"], correct: 2 },
+      { q: "Which phase of ethical hacking involves gathering information about the target?", options: ["Exploitation", "Scanning", "Reconnaissance", "Reporting"], correct: 2 },
+      { q: "What does SQL injection target?", options: ["Network protocols", "Databases", "Operating systems", "Hardware"], correct: 1 },
+      { q: "Which tool is a popular network scanner?", options: ["Photoshop", "Nmap", "Excel", "Slack"], correct: 1 },
+      { q: "What is the Philippine law covering cybercrime?", options: ["RA 9003", "RA 10175", "RA 8792", "RA 11032"], correct: 1 },
+      { q: "What does XSS stand for?", options: ["Extra Simple Security", "Cross-Site Scripting", "Extended System Shell", "Cross-Server Sync"], correct: 1 },
+      { q: "Which platform is created by Carnegie Mellon for CTF practice?", options: ["TryHackMe", "HackerOne", "PicoCTF", "Shodan"], correct: 2 },
+      { q: "What is the 'weakest link' in cybersecurity?", options: ["Firewalls", "Encryption", "Humans", "Antivirus"], correct: 2 },
+      { q: "A zero-day vulnerability means:", options: ["The system has been down for zero days", "The vendor has zero days of warning", "The attack took zero days to execute", "Zero users are affected"], correct: 1 },
+      { q: "What should you ALWAYS have before performing a penetration test?", options: ["A VPN", "Written permission", "Kali Linux", "Social media access"], correct: 1 },
+    ];
+
+    let quizAnswered = 0;
+    let quizCorrect = 0;
+    const quizContainer = document.getElementById('quiz-container');
+
+    quizData.forEach((q, qi) => {
+      const div = document.createElement('div');
+      div.className = 'rounded-xl p-6';
+      div.style.cssText = 'background: var(--surface); border: 1px solid rgba(255,255,255,0.06);';
+      div.innerHTML = `
+        <p class="mono text-xs mb-2" style="color: var(--primary-action);">Question ${qi + 1}/${quizData.length}</p>
+        <p class="font-600 mb-4">${q.q}</p>
+        <div class="space-y-2" id="quiz-q${qi}">
+          ${q.options.map((opt, oi) => `
+            <div class="quiz-option p-3 rounded-lg text-sm" style="background: var(--bg); border: 2px solid rgba(255,255,255,0.06);" onclick="answerQuiz(${qi}, ${oi})" data-qi="${qi}" data-oi="${oi}">
+              <span class="mono mr-2 opacity-50">${String.fromCharCode(65 + oi)}.</span> ${opt}
+            </div>
+          `).join('')}
+        </div>
+        <p id="quiz-explain-${qi}" class="text-sm mt-3 hidden"></p>`;
+      quizContainer.appendChild(div);
+    });
+
+    function answerQuiz(qi, oi) {
+      const container = document.getElementById(`quiz-q${qi}`);
+      if (container.dataset.answered) return;
+      container.dataset.answered = 'true';
+      quizAnswered++;
+      const options = container.querySelectorAll('.quiz-option');
+      options.forEach(opt => { opt.style.cursor = 'default'; });
+      if (oi === quizData[qi].correct) {
+        quizCorrect++;
+        options[oi].classList.add('quiz-correct');
+      } else {
+        options[oi].classList.add('quiz-wrong');
+        options[quizData[qi].correct].classList.add('quiz-correct');
+      }
+      if (quizAnswered === quizData.length) {
+        const scoreEl = document.getElementById('quiz-score');
+        scoreEl.classList.remove('hidden');
+        const pct = Math.round((quizCorrect / quizData.length) * 100);
+        let msg = pct >= 80 ? '🏆 Excellent!' : pct >= 60 ? '👍 Good job!' : '📚 Keep studying!';
+        scoreEl.innerHTML = `<p class="text-4xl font-800 mb-2" style="color: var(--primary-action);">${quizCorrect}/${quizData.length}</p><p class="text-xl font-600">${msg}</p><p class="opacity-60 mt-2">${pct}% correct</p>`;
+      }
+    }
+
+    lucide.createIcons();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e76542e635c09f8',t:'MTc3NTM2ODc4OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
